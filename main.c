@@ -6,7 +6,7 @@
 #include <allegro5/allegro_acodec.h> // Decodificador para a biblioteca de audio
 #include "src/core/game.h" // Arquivo do jogo, para quesitos de fases do jogo e tudo o mais
 #include "src/ui/menu.h" // Arquivo do menu principal
-#include "src/core/config.h" // Arquivo com configurações padrões de tela e FPS
+#include "src/core/config.h" // Arquivo header com as configurações do jogo
 
 int main(void) { // define função main, que não recebe nenhum argumento (void)
     // Inicialização do Allegro e seus módulos
@@ -22,13 +22,13 @@ int main(void) { // define função main, que não recebe nenhum argumento (void
     ALLEGRO_DISPLAY      *tela  = al_create_display(LARGURA_TELA, ALTURA_TELA); // TELA
     ALLEGRO_TIMER        *timer = al_create_timer(1.0 / FPS); // TIMER
     ALLEGRO_EVENT_QUEUE  *fila  = al_create_event_queue(); // FILA DE EVENTOS
-    
     //Fontes
-    ALLEGRO_FONT *fonte_titulo = al_load_ttf_font("assets/fonts/Agbalumo-Regular.ttf", 72, 0);
-    ALLEGRO_FONT *fonte_opcoes = al_load_ttf_font("assets/fonts/Tinos-Regular.ttf", 36, 0);
+    ALLEGRO_FONT *fonte_titulo = al_load_ttf_font("assets/fonts/Agbalumo-Regular.ttf", ALTURA_TELA*0.12, 0);
+    ALLEGRO_FONT *fonte_opcoes = al_load_ttf_font("assets/fonts/Tinos-Regular.ttf", ALTURA_TELA*0.06, 0);
+    ALLEGRO_FONT *fonte_opcoes_menores = al_load_ttf_font("assets/fonts/Silkscreen-Regular.ttf", ALTURA_TELA*0.042, 0);
 
     //Função definida em menu.c
-    inicializar_menu(fonte_titulo, fonte_opcoes);
+    inicializar_menu(fonte_titulo, fonte_opcoes, fonte_opcoes_menores);
 
     // Registra as ações do usuário para com o jogo, tela, frames e teclado.
     al_register_event_source(fila, al_get_display_event_source(tela));
@@ -59,30 +59,73 @@ int main(void) { // define função main, que não recebe nenhum argumento (void
             precisa_desenhar = 1;
         }
 
-        // Tecla pressionada
-        if (evento.type == ALLEGRO_EVENT_KEY_DOWN) {
-            if (evento.keyboard.keycode == ALLEGRO_KEY_ESCAPE) { // verifica se ESC está apertado
-                if (estado == ESTADO_MENU) {
-                    rodando = 0;  // ESC no menu fecha o jogo
+        // Sistema para seleção de opção
+        if (config_aberto){// verifica se o campo das config está aberto.
+            if (evento.type == ALLEGRO_EVENT_KEY_DOWN) {//KEY_DOWN é se está pressionado
+                if (evento.keyboard.keycode == ALLEGRO_KEY_ESCAPE) { // verifica se ESC está apertado
+                    config_aberto=0;//Fecha configurações
+                    opcao_config=0;
                 }
-                if (estado == ESTADO_JOGANDO) {
-                    estado = ESTADO_PAUSE;  // ESC durante jogo apenas pausa
-                }
-                if (estado == ESTADO_PAUSE) {
-                    estado = ESTADO_JOGANDO;  // ESC no pause volta ao jogo
-                }
-            }
-            if (estado == ESTADO_MENU) {
-                if (evento.keyboard.keycode == ALLEGRO_KEY_DOWN) {
-                    if (opcao_menu < 2){opcao_menu++;}
-                }
-                if (evento.keyboard.keycode == ALLEGRO_KEY_UP) {
-                    if (opcao_menu > 0){opcao_menu--;}
+                if (!foco_config){
+                    if (evento.keyboard.keycode == ALLEGRO_KEY_DOWN) {
+                        if (opcao_config < 4){opcao_config++;}
+                    }
+                    if (evento.keyboard.keycode == ALLEGRO_KEY_UP) {
+                        if (opcao_config > 0){opcao_config--;}
+                    }
+                }else{
+                    if (evento.keyboard.keycode == ALLEGRO_KEY_LEFT) {
+                        if (VOLUME_GLOBAL>0){VOLUME_GLOBAL-=0.1;}
+                    }
+                    if (evento.keyboard.keycode == ALLEGRO_KEY_RIGHT) {
+                        if (VOLUME_GLOBAL<1){VOLUME_GLOBAL+=0.1;}
+                    }
                 }
                 if (evento.keyboard.keycode == ALLEGRO_KEY_ENTER) {
-                    if (opcao_menu == 0) estado = ESTADO_JOGANDO;
-                    if (opcao_menu == 1) estado = ESTADO_CREDITOS;
-                    if (opcao_menu == 2) rodando = 0;
+                    if (opcao_config == 0){if (foco_config){foco_config=0;}else{foco_config=1;}}
+                    else if (opcao_config == 4){config_aberto=0;opcao_config=0;}
+                    else {
+                        if (opcao_config == 1){LARGURA_TELA = resolucoes[0][0]; ALTURA_TELA = resolucoes[0][1];}
+                        if (opcao_config == 2){LARGURA_TELA = resolucoes[1][0]; ALTURA_TELA = resolucoes[1][1];}
+                        if (opcao_config == 3){LARGURA_TELA = resolucoes[2][0]; ALTURA_TELA = resolucoes[2][1];}
+                        al_unregister_event_source(fila, al_get_display_event_source(tela));
+                        al_destroy_display(tela); 
+                        tela = al_create_display(LARGURA_TELA, ALTURA_TELA);
+                        ALLEGRO_FONT *fonte_titulo = al_load_ttf_font("assets/fonts/Agbalumo-Regular.ttf", ALTURA_TELA*0.12, 0);
+                        ALLEGRO_FONT *fonte_opcoes = al_load_ttf_font("assets/fonts/Tinos-Regular.ttf", ALTURA_TELA*0.06, 0);
+                        ALLEGRO_FONT *fonte_opcoes_menores = al_load_ttf_font("assets/fonts/Silkscreen-Regular.ttf", ALTURA_TELA*0.042, 0);
+                        inicializar_menu(fonte_titulo, fonte_opcoes, fonte_opcoes_menores);
+                        al_register_event_source(fila, al_get_display_event_source(tela));
+                        al_set_window_title(tela, "Magic Training");
+                    }
+                }                    
+            }
+        }else{
+            if (evento.type == ALLEGRO_EVENT_KEY_DOWN) {
+                if (evento.keyboard.keycode == ALLEGRO_KEY_ESCAPE) { // verifica se ESC está apertado
+                    if (estado == ESTADO_MENU) {
+                        rodando = 0;  // ESC no menu fecha o jogo
+                    }
+                    if (estado == ESTADO_JOGANDO) {
+                        estado = ESTADO_PAUSE;  // ESC durante jogo apenas pausa
+                    }
+                    if (estado == ESTADO_PAUSE) {
+                        estado = ESTADO_JOGANDO;  // ESC no pause volta ao jogo
+                    }
+                }
+                if (estado == ESTADO_MENU) {
+                    if (evento.keyboard.keycode == ALLEGRO_KEY_DOWN) {
+                        if (opcao_menu < 3){opcao_menu++;}
+                    }
+                    if (evento.keyboard.keycode == ALLEGRO_KEY_UP) {
+                        if (opcao_menu > 0){opcao_menu--;}
+                    }
+                    if (evento.keyboard.keycode == ALLEGRO_KEY_ENTER) {
+                        if (opcao_menu == 0) estado = ESTADO_JOGANDO;
+                        if (opcao_menu == 1) config_aberto=1;
+                        if (opcao_menu == 2) estado = ESTADO_CREDITOS;
+                        if (opcao_menu == 3) rodando = 0;
+                    }
                 }
             }
         }
@@ -93,6 +136,10 @@ int main(void) { // define função main, que não recebe nenhum argumento (void
 
             if (estado == ESTADO_MENU) {
                 desenhar_menu();
+            }
+
+            if (config_aberto){
+                desenhar_config_popup();
             }
             // Aqui vão as funções de draw de cada estado
             // Ex: if (estado == ESTADO_MENU) desenhar_menu();
