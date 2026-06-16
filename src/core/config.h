@@ -12,8 +12,6 @@ extern float VOLUME_GLOBAL;
 extern int resolucoes[3][2];
 extern int resolucao_atual;
 
-void mudar_resolucao(int, int);
-
 #define FPS 60
 
 #endif

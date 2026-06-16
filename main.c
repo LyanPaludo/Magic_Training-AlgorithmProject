@@ -7,6 +7,8 @@
 #include "src/core/game.h" // Arquivo do jogo, para quesitos de fases do jogo e tudo o mais
 #include "src/ui/menu.h" // Arquivo do menu principal
 #include "src/core/config.h" // Arquivo header com as configurações do jogo
+#include "src/core/audio.h" // arquivo de audio geral
+#include "src/ui/particulas.h" // arquivo de particulas do menu principal
 
 int main(void) { // define função main, que não recebe nenhum argumento (void)
     // Inicialização do Allegro e seus módulos
@@ -29,7 +31,9 @@ int main(void) { // define função main, que não recebe nenhum argumento (void
 
     //Função definida em menu.c
     inicializar_menu(fonte_titulo, fonte_opcoes, fonte_opcoes_menores);
-
+    inicializar_audio();
+    tocar_musica("assets/audio/music/fundo_menu.ogg");
+    inicializar_particulas();
     // Registra as ações do usuário para com o jogo, tela, frames e teclado.
     al_register_event_source(fila, al_get_display_event_source(tela));
     al_register_event_source(fila, al_get_timer_event_source(timer));
@@ -44,6 +48,7 @@ int main(void) { // define função main, que não recebe nenhum argumento (void
     int       rodando       = 1;
     int       precisa_desenhar = 0;// Define quando é a hora de desenhar, importante para a mecânica do jogo
 
+    
     // --- Loop principal ---
     while (rodando) {
         ALLEGRO_EVENT evento;
@@ -56,6 +61,9 @@ int main(void) { // define função main, que não recebe nenhum argumento (void
 
         // Verifica se o evento chegou, caso tenha chegado, atualiza a tela.
         if (evento.type == ALLEGRO_EVENT_TIMER) {
+            if (estado == ESTADO_MENU) {
+                atualizar_particulas();
+            }
             precisa_desenhar = 1;
         }
 
@@ -76,9 +84,11 @@ int main(void) { // define função main, que não recebe nenhum argumento (void
                 }else{
                     if (evento.keyboard.keycode == ALLEGRO_KEY_LEFT) {
                         if (VOLUME_GLOBAL>0){VOLUME_GLOBAL-=0.1;}
+                        aplicar_volume(VOLUME_GLOBAL);
                     }
                     if (evento.keyboard.keycode == ALLEGRO_KEY_RIGHT) {
                         if (VOLUME_GLOBAL<1){VOLUME_GLOBAL+=0.1;}
+                        aplicar_volume(VOLUME_GLOBAL);
                     }
                 }
                 if (evento.keyboard.keycode == ALLEGRO_KEY_ENTER) {
@@ -91,10 +101,14 @@ int main(void) { // define função main, que não recebe nenhum argumento (void
                         al_unregister_event_source(fila, al_get_display_event_source(tela));
                         al_destroy_display(tela); 
                         tela = al_create_display(LARGURA_TELA, ALTURA_TELA);
-                        ALLEGRO_FONT *fonte_titulo = al_load_ttf_font("assets/fonts/Agbalumo-Regular.ttf", ALTURA_TELA*0.12, 0);
-                        ALLEGRO_FONT *fonte_opcoes = al_load_ttf_font("assets/fonts/Tinos-Regular.ttf", ALTURA_TELA*0.06, 0);
-                        ALLEGRO_FONT *fonte_opcoes_menores = al_load_ttf_font("assets/fonts/Silkscreen-Regular.ttf", ALTURA_TELA*0.042, 0);
+                        al_destroy_font(fonte_titulo);
+                        al_destroy_font(fonte_opcoes);
+                        al_destroy_font(fonte_opcoes_menores);
+                        fonte_titulo = al_load_ttf_font("assets/fonts/Agbalumo-Regular.ttf", ALTURA_TELA*0.12, 0);
+                        fonte_opcoes = al_load_ttf_font("assets/fonts/Tinos-Regular.ttf", ALTURA_TELA*0.06, 0);
+                        fonte_opcoes_menores = al_load_ttf_font("assets/fonts/Silkscreen-Regular.ttf", ALTURA_TELA*0.042, 0);
                         inicializar_menu(fonte_titulo, fonte_opcoes, fonte_opcoes_menores);
+                        inicializar_particulas();
                         al_register_event_source(fila, al_get_display_event_source(tela));
                         al_set_window_title(tela, "Magic Training");
                     }
@@ -135,6 +149,7 @@ int main(void) { // define função main, que não recebe nenhum argumento (void
             al_clear_to_color(al_map_rgb(10, 10, 20)); // fundo da tela
 
             if (estado == ESTADO_MENU) {
+                desenhar_particulas();
                 desenhar_menu();
             }
 
@@ -150,9 +165,11 @@ int main(void) { // define função main, que não recebe nenhum argumento (void
     }
 
     // --- Limpeza de memória ---
+    al_destroy_font(fonte_titulo);
+    al_destroy_font(fonte_opcoes);
+    al_destroy_font(fonte_opcoes_menores);
     al_destroy_display(tela);
     al_destroy_timer(timer);
     al_destroy_event_queue(fila);
-
     return 0;
 }

@@ -10,7 +10,6 @@ título e as opções do menu principal de uma forma mais separada
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_primitives.h>
 #include "../core/config.h"
-#include <math.h>
 
 // Variáveis internas, oposto do extern, static fica só aqui
 static ALLEGRO_FONT *fonte_titulo  = NULL;
