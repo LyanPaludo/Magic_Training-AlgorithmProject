@@ -5,7 +5,7 @@ Arquivo para rodar a música no menu principal.
 #include <allegro5/allegro_audio.h>
 #include <allegro5/allegro_acodec.h>
 #include "config.h"
-
+#include "game.h"
 static ALLEGRO_AUDIO_STREAM *musica_atual = NULL;//Variável para guardar stream da música
 
 void inicializar_audio(void) {
@@ -37,4 +37,21 @@ void parar_musica(void){
 
 void aplicar_volume(float volume) {
     al_set_mixer_gain(al_get_default_mixer(), volume);
+}
+
+void trocar_musica_por_estado(GameState estado) {
+    switch (estado) {
+        case ESTADO_MENU:
+            tocar_musica("assets/audio/music/fundo_menu.ogg");
+            break;
+        case ESTADO_CUTSCENE:
+        case ESTADO_TUTORIAL:
+            parar_musica();
+            break;
+        case ESTADO_JOGANDO:
+            tocar_musica("assets/audio/music/fase1.ogg");
+            break;
+        default:
+            break;
+    }
 }

@@ -2,7 +2,7 @@
 #include <time.h>     // time() para seed do rand
 #include <math.h>     // sin()
 #include "particulas.h"
-#include "../core/config.h"
+#include "../../core/config.h"
 #include <allegro5/allegro_primitives.h>
 
 #define NUM_PARTICULAS 50
